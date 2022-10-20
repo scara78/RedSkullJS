@@ -1,4 +1,6 @@
 import axios from "axios";
+import {setupCache} from 'axios-cache-interceptor';
+
 
 import vrf_generator from "./reverse_engineered/vrf_generator";
 import *  as response_parsers from "./response_parsers.js";
@@ -20,11 +22,12 @@ const SUPPORTED_SERVER = [
 
 export default class RedSkull {
     constructor() {
-        this.session = axios.create({
+        this.session = setupCache(axios.create({
             baseURL: BASE_URL,
             headers: HEADERS
-        })
+        }))
         this.setSessionCookie().then()
+        this.cacheTimeout = 1000 * 60 * 30
     }
 
     async setSessionCookie() {
@@ -36,13 +39,13 @@ export default class RedSkull {
         const vrf = vrf_generator(keyword)
         keyword = encodeURIComponent(keyword)
         const url = `${BASE_URL}/search?vrf=${vrf}&keyword=${keyword}&page=${page_no}`
-        const resp = await this.session.get(url)
+        const resp = await this.session.get(url, {cache: {ttl: this.cacheTimeout}})
         return new response_parsers.SearchParser(resp.data).parse()
     }
 
     async trending() {
         const url = `${BASE_URL}/home`
-        const resp = await this.session.get(url)
+        const resp = await this.session.get(url, {cache: {ttl: this.cacheTimeout}})
         return new response_parsers.TrendingParser(resp.data).parse()
     }
 }
