@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio';
+import {URLSearchParams} from 'react-native-url-polyfill';
 
 
 class SearchParser {
