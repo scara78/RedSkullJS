@@ -18,7 +18,7 @@ const SUPPORTED_SERVER = [
 ]
 
 
-export default class API {
+export default class RedSkull {
     constructor() {
         this.session = axios.create({
             baseURL: BASE_URL,
