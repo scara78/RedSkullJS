@@ -38,14 +38,14 @@ export default class RedSkull {
 
     async mediaIdInfo(mediaID) {
         const media_code = mediaID.split("-").at(-1)
-        const vrf = vrf_generator(media_code)
+        const vrf = encodeURIComponent(vrf_generator(media_code))
         const url = `${BASE_URL}/ajax/film/servers?id=${media_code}&vrf=${vrf}`
         const resp = await this.session.get(url, {cache: {ttl: this.cacheTimeout}})
         return resp.data.html
     }
 
     async search(keyword, page_no = 1) {
-        const vrf = vrf_generator(keyword)
+        const vrf = encodeURIComponent(vrf_generator(keyword))
         keyword = encodeURIComponent(keyword)
         const url = `${BASE_URL}/search?vrf=${vrf}&keyword=${keyword}&page=${page_no}`
         const resp = await this.session.get(url, {cache: {ttl: this.cacheTimeout}})
