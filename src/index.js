@@ -19,6 +19,17 @@ const HEADERS = {
 const SUPPORTED_SERVER = [
     "filemoon"
 ]
+const cacheTimeout = 1000 * 60 * 30
+
+
+async function mediaIdInfo(mediaID, session) {
+    let media_code = mediaID.split("-")
+    media_code = media_code[media_code.length - 1]
+    const vrf = encodeURIComponent(vrf_generator(media_code))
+    const url = `${BASE_URL}/ajax/film/servers?id=${media_code}&vrf=${vrf}`
+    const resp = await session.get(url, {cache: {ttl: cacheTimeout}})
+    return resp.data.html
+}
 
 
 export default class RedSkull {
@@ -28,7 +39,6 @@ export default class RedSkull {
             headers: HEADERS
         }))
         this.setSessionCookie().then()
-        this.cacheTimeout = 1000 * 60 * 30
     }
 
     async setSessionCookie() {
@@ -36,29 +46,21 @@ export default class RedSkull {
         this.session.defaults.headers.Cookie = resp.headers["set-cookie"][0];
     }
 
-    async mediaIdInfo(mediaID) {
-        const media_code = mediaID.split("-").at(-1)
-        const vrf = encodeURIComponent(vrf_generator(media_code))
-        const url = `${BASE_URL}/ajax/film/servers?id=${media_code}&vrf=${vrf}`
-        const resp = await this.session.get(url, {cache: {ttl: this.cacheTimeout}})
-        return resp.data.html
-    }
-
     async search(keyword, page_no = 1) {
         const vrf = encodeURIComponent(vrf_generator(keyword))
         keyword = encodeURIComponent(keyword)
         const url = `${BASE_URL}/search?vrf=${vrf}&keyword=${keyword}&page=${page_no}`
-        const resp = await this.session.get(url, {cache: {ttl: this.cacheTimeout}})
+        const resp = await this.session.get(url, {cache: {ttl: cacheTimeout}})
         return new response_parsers.SearchParser(resp.data).parse()
     }
 
     async series(mediaID) {
-        const html = await this.mediaIdInfo(mediaID)
+        const html = await mediaIdInfo(mediaID, this.session)
         return new response_parsers.SeriesParser(html, SUPPORTED_SERVER).parse()
     }
 
     async movie(mediaID) {
-        const html = await this.mediaIdInfo(mediaID)
+        const html = await mediaIdInfo(mediaID, this.session)
         return new response_parsers.MovieParser(html, SUPPORTED_SERVER).parse()
     }
 
@@ -72,7 +74,7 @@ export default class RedSkull {
 
     async trending() {
         const url = `${BASE_URL}/home`
-        const resp = await this.session.get(url, {cache: {ttl: this.cacheTimeout}})
+        const resp = await this.session.get(url, {cache: {ttl: cacheTimeout}})
         return new response_parsers.TrendingParser(resp.data).parse()
     }
 }

@@ -100,7 +100,8 @@ class SeriesParser {
 
         for (let episode of item.find("div.range > div.episode > a")) {
             const $ = this.$(episode)
-            let episode_number = $.attr("data-kname").replace("-end", "").split("-").at(-1)
+            let episode_number = $.attr("data-kname").replace("-end", "").split("-")
+            episode_number = episode_number[episode_number.length - 1]
             episode_number = episode_number !== "full" ? parseInt(episode_number) : 1
             episodes[episode_number] = this.parseEpisode($)
         }
@@ -110,9 +111,10 @@ class SeriesParser {
     }
 
     parseEpisode(item) {
+        let date = item.attr("title").split(" - ")
         return {
             "name": item.find("span.name").text(),
-            "date": item.attr("title").split(" - ").at(-1),
+            "date": date[date.length - 1],
             "sources": this.parseEpisodeSources(JSON.parse(item.attr("data-ep")))
         }
     }
