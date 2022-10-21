@@ -137,6 +137,29 @@ class SeriesParser {
 
 }
 
+class MovieParser {
+    constructor(html, supportedServers) {
+        this.seriesData = new SeriesParser(html, supportedServers).parse()
+    }
+
+    parse() {
+        const serverMap = {}
+        for (let serverName in this.seriesData.servers) {
+            const serverID = this.seriesData.servers[serverName]
+            serverMap[serverID] = serverName
+        }
+
+        let sources = this.seriesData.episodes[1][1]["sources"]
+        let parsedSources = {}
+        for (let serverID in sources) {
+            const episodeID = sources[serverID]
+            parsedSources[serverMap[serverID]] = episodeID
+        }
+
+        return parsedSources
+    }
+}
+
 class TrendingParser {
     constructor(html) {
         this.html = html
@@ -176,4 +199,4 @@ class TrendingParser {
 }
 
 
-export {SearchParser, SeriesParser, TrendingParser};
+export {SearchParser, SeriesParser, MovieParser, TrendingParser};

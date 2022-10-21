@@ -56,6 +56,11 @@ export default class RedSkull {
         return new response_parsers.SeriesParser(html, SUPPORTED_SERVER).parse()
     }
 
+    async movie(mediaID) {
+        const html = await this.mediaIdInfo(mediaID)
+        return new response_parsers.MovieParser(html, SUPPORTED_SERVER).parse()
+    }
+
     async trending() {
         const url = `${BASE_URL}/home`
         const resp = await this.session.get(url, {cache: {ttl: this.cacheTimeout}})
