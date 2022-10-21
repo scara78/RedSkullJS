@@ -160,6 +160,54 @@ class MovieParser {
     }
 }
 
+class EpisodeParser {
+    constructor(session, iframeURL) {
+        this.session = session
+        this.iframeURL = iframeURL
+    }
+
+    async parse() {
+        return {
+            "url": await this.get_m3u8_URL()
+        }
+    }
+
+    async get_m3u8_URL() {
+        if (this.iframeURL.includes("filemoon")) {
+            return await this.filemoonParser()
+        }
+        return ""
+    }
+
+    async filemoonParser() {
+        const resp = await this.session.get(this.iframeURL)
+        const $ = cheerio.load(resp.data)
+
+        let script;
+        for (let scriptTag of $("script")) {
+            scriptTag = $(scriptTag)
+            if (scriptTag.text().startsWith("eval")) {
+                script = scriptTag.text().replace("eval", "")
+            }
+        }
+
+        if (script === undefined) {
+            throw Error("Unable to find player information script from FileMoon Server")
+        }
+
+        script = String(eval(script))
+        const regexp = new RegExp('file\\s*:\\s*\"((http|ftp|https)://([\\w_-]+(?:\\.[\\w_-]+)+)([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-]))\"')
+        let url = script.match(regexp)[1]
+
+        if (url.includes("m3u8")) {
+            return url
+        }
+
+        throw Error("Unable to find m3u8 URL from FileMoon Server")
+
+    }
+}
+
 class TrendingParser {
     constructor(html) {
         this.html = html
@@ -199,4 +247,4 @@ class TrendingParser {
 }
 
 
-export {SearchParser, SeriesParser, MovieParser, TrendingParser};
+export {SearchParser, SeriesParser, MovieParser, EpisodeParser, TrendingParser};

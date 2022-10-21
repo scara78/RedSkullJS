@@ -3,6 +3,7 @@ import {setupCache} from 'axios-cache-interceptor';
 
 
 import vrf_generator from "./reverse_engineered/vrf_generator";
+import encryptedURLDecoder from "./reverse_engineered/encryptedURLDecoder.js";
 import *  as response_parsers from "./response_parsers.js";
 
 
@@ -59,6 +60,14 @@ export default class RedSkull {
     async movie(mediaID) {
         const html = await this.mediaIdInfo(mediaID)
         return new response_parsers.MovieParser(html, SUPPORTED_SERVER).parse()
+    }
+
+    async episode(episodeID) {
+        const url = `${BASE_URL}/ajax/episode/info?id=${episodeID}`
+        const resp = await this.session.get(url)
+        const encryptedURL = resp.data.url
+        const iframeURL = encryptedURLDecoder(encryptedURL)
+        return new response_parsers.EpisodeParser(this.session, iframeURL).parse()
     }
 
     async trending() {
