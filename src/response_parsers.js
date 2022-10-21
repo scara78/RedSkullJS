@@ -52,6 +52,91 @@ class SearchParser {
     }
 }
 
+class SeriesParser {
+    constructor(html, supportedServers) {
+        this.html = html;
+        this.supportedServers = supportedServers;
+        this.$ = cheerio.load(this.html);
+        this.servers = this.parseServers()
+    }
+
+    parse() {
+        return {
+            "servers": this.servers,
+            "episodes": this.parseSeries(),
+        }
+    }
+
+    parseServers() {
+        const servers = {}
+
+        for (let item of this.$("div#servers > div.server")) {
+            const $ = this.$(item)
+            const serverName = $.find("div").text().toLowerCase()
+            const isValidServer = this.supportedServers.includes(serverName)
+            if (isValidServer) {
+                const server_id = $.attr("data-id")
+                servers[serverName] = server_id
+            }
+        }
+
+        return servers;
+    }
+
+    parseSeries() {
+        const series = {}
+
+        for (let item of this.$("div#episodes > div.episodes")) {
+            const $ = this.$(item)
+            const season = parseInt($.attr("data-season"))
+            series[season] = this.parseEpisodes($)
+        }
+
+        return series
+    }
+
+    parseEpisodes(item) {
+        const episodes = {}
+
+        for (let episode of item.find("div.range > div.episode > a")) {
+            const $ = this.$(episode)
+            let episode_number = $.attr("data-kname").replace("-end", "").split("-").at(-1)
+            episode_number = episode_number !== "full" ? parseInt(episode_number) : 1
+            episodes[episode_number] = this.parseEpisode($)
+        }
+
+        return episodes
+
+    }
+
+    parseEpisode(item) {
+        return {
+            "name": item.find("span.name").text(),
+            "date": item.attr("title").split(" - ").at(-1),
+            "sources": this.parseEpisodeSources(JSON.parse(item.attr("data-ep")))
+        }
+    }
+
+    parseEpisodeSources(data) {
+        const supportedServerIds = []
+        for (let serverID in this.servers) {
+            supportedServerIds.push(this.servers[serverID])
+        }
+
+
+        const sources = {}
+        for (let serverID in data) {
+            if (supportedServerIds.includes(serverID)) {
+                const episodeID = data[serverID]
+                sources[serverID] = episodeID
+            }
+        }
+
+        return sources
+    }
+
+}
+
 class TrendingParser {
     constructor(html) {
         this.html = html
@@ -91,4 +176,4 @@ class TrendingParser {
 }
 
 
-export {SearchParser, TrendingParser};
+export {SearchParser, SeriesParser, TrendingParser};

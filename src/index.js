@@ -35,12 +35,25 @@ export default class RedSkull {
         this.session.defaults.headers.Cookie = resp.headers["set-cookie"][0];
     }
 
+    async mediaIdInfo(mediaID) {
+        const media_code = mediaID.split("-").at(-1)
+        const vrf = vrf_generator(media_code)
+        const url = `${BASE_URL}/ajax/film/servers?id=${media_code}&vrf=${vrf}`
+        const resp = await this.session.get(url, {cache: {ttl: this.cacheTimeout}})
+        return resp.data.html
+    }
+
     async search(keyword, page_no = 1) {
         const vrf = vrf_generator(keyword)
         keyword = encodeURIComponent(keyword)
         const url = `${BASE_URL}/search?vrf=${vrf}&keyword=${keyword}&page=${page_no}`
         const resp = await this.session.get(url, {cache: {ttl: this.cacheTimeout}})
         return new response_parsers.SearchParser(resp.data).parse()
+    }
+
+    async series(mediaID) {
+        const html = await this.mediaIdInfo(mediaID)
+        return new response_parsers.SeriesParser(html, SUPPORTED_SERVER).parse()
     }
 
     async trending() {
