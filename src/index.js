@@ -2,7 +2,7 @@ import axios from "axios";
 import {setupCache} from 'axios-cache-interceptor';
 
 
-import vrf_generator from "./reverse_engineered/vrf_generator";
+import vrf_generator from "./reverse_engineered/vrf_generator.js";
 import encryptedURLDecoder from "./reverse_engineered/encryptedURLDecoder.js";
 import *  as response_parsers from "./response_parsers.js";
 
